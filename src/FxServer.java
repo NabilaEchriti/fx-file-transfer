@@ -45,6 +45,26 @@ public class FxServer {
                         headerWriter.write("NOT FOUND\n");
                         headerWriter.flush();
                     }
+
+                } else if (command.equals("upload")) {
+                    try {
+                        int fileSize = Integer.parseInt(tokenizer.nextToken());
+
+                        byte[] fileBytes = new byte[fileSize];
+                        DataInputStream dataIn = new DataInputStream(in);
+                        dataIn.readFully(fileBytes);
+
+                        FileOutputStream fileOut = new FileOutputStream("ServerShare/" + fileName);
+                        fileOut.write(fileBytes);
+                        fileOut.close();
+
+                        headerWriter.write("STORED\n");
+                        headerWriter.flush();
+
+                    } catch (Exception e) {
+                        headerWriter.write("FAILED\n");
+                        headerWriter.flush();
+                    }
                 }
 
                 connectionFromClient.close();

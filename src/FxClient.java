@@ -43,6 +43,31 @@ public class FxClient {
                         System.out.println("Fichier téléchargé avec succès : " + fileName);
                     }
                 }
+
+            } else if (command.equals("u")) {
+                File file = new File("ClientShare/" + fileName);
+                long fileSize = file.length();
+
+                String request = "upload " + fileName + " " + fileSize + "\n";
+                headerWriter.write(request);
+                headerWriter.flush();
+
+                FileInputStream fileIn = new FileInputStream(file);
+                byte[] fileBytes = new byte[(int) fileSize];
+                fileIn.read(fileBytes);
+                fileIn.close();
+
+                DataOutputStream dataOut = new DataOutputStream(out);
+                dataOut.write(fileBytes);
+                dataOut.flush();
+
+                String response = headerReader.readLine();
+
+                if (response.equals("STORED")) {
+                    System.out.println("Fichier envoyé avec succès : " + fileName);
+                } else {
+                    System.out.println("Échec de l'envoi du fichier.");
+                }
             }
         }
     }
