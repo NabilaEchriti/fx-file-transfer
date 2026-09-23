@@ -11,63 +11,64 @@ public class FxServer {
             System.out.println("Server waiting...");
 
             while (true) {
-                Socket connectionFromClient = serverSocket.accept();
-                System.out.println("Client connected: " + connectionFromClient.getPort());
+                try (Socket connectionFromClient = serverSocket.accept()) {
+                    System.out.println("Client connected: " + connectionFromClient.getPort());
 
-                InputStream in = connectionFromClient.getInputStream();
-                OutputStream out = connectionFromClient.getOutputStream();
+                    InputStream in = connectionFromClient.getInputStream();
+                    OutputStream out = connectionFromClient.getOutputStream();
 
-                BufferedReader headerReader = new BufferedReader(new InputStreamReader(in));
-                BufferedWriter headerWriter = new BufferedWriter(new OutputStreamWriter(out));
+                    BufferedReader headerReader = new BufferedReader(new InputStreamReader(in));
+                    BufferedWriter headerWriter = new BufferedWriter(new OutputStreamWriter(out));
 
-                String header = headerReader.readLine();
-                StringTokenizer tokenizer = new StringTokenizer(header, " ");
-                String command = tokenizer.nextToken();
-                String fileName = tokenizer.nextToken();
+                    String header = headerReader.readLine();
+                    StringTokenizer tokenizer = new StringTokenizer(header, " ");
+                    String command = tokenizer.nextToken();
+                    String fileName = tokenizer.nextToken();
 
-                if (command.equals("download")) {
-                    try {
-                        FileInputStream fileIn = new FileInputStream("ServerShare/" + fileName);
-                        int fileSize = fileIn.available();
+                    if (command.equals("download")) {
+                        try (FileInputStream fileIn = new FileInputStream("ServerShare/" + fileName)) {
+                            int fileSize = fileIn.available();
 
-                        String response = "OK " + fileSize + "\n";
-                        headerWriter.write(response);
-                        headerWriter.flush();
+                            String response = "OK " + fileSize + "\n";
+                            headerWriter.write(response);
+                            headerWriter.flush();
 
-                        byte[] bytes = new byte[fileSize];
-                        fileIn.read(bytes);
-                        fileIn.close();
+                            byte[] bytes = new byte[fileSize];
+                            fileIn.read(bytes);
 
-                        DataOutputStream dataOut = new DataOutputStream(out);
-                        dataOut.write(bytes);
+                            DataOutputStream dataOut = new DataOutputStream(out);
+                            dataOut.write(bytes);
+                            dataOut.flush();
 
-                    } catch (FileNotFoundException e) {
-                        headerWriter.write("NOT FOUND\n");
-                        headerWriter.flush();
+                        } catch (FileNotFoundException e) {
+                            headerWriter.write("NOT FOUND\n");
+                            headerWriter.flush();
+                        }
+
+                    } else if (command.equals("upload")) {
+                        try {
+                            int fileSize = Integer.parseInt(tokenizer.nextToken());
+
+                            byte[] fileBytes = new byte[fileSize];
+                            DataInputStream dataIn = new DataInputStream(in);
+                            dataIn.readFully(fileBytes);
+
+                            try (FileOutputStream fileOut = new FileOutputStream("ServerShare/" + fileName)) {
+                                fileOut.write(fileBytes);
+                            }
+
+                            headerWriter.write("STORED\n");
+                            headerWriter.flush();
+
+                        } catch (Exception e) {
+                            headerWriter.write("FAILED\n");
+                            headerWriter.flush();
+                        }
                     }
 
-                } else if (command.equals("upload")) {
-                    try {
-                        int fileSize = Integer.parseInt(tokenizer.nextToken());
-
-                        byte[] fileBytes = new byte[fileSize];
-                        DataInputStream dataIn = new DataInputStream(in);
-                        dataIn.readFully(fileBytes);
-
-                        FileOutputStream fileOut = new FileOutputStream("ServerShare/" + fileName);
-                        fileOut.write(fileBytes);
-                        fileOut.close();
-
-                        headerWriter.write("STORED\n");
-                        headerWriter.flush();
-
-                    } catch (Exception e) {
-                        headerWriter.write("FAILED\n");
-                        headerWriter.flush();
-                    }
+                } catch (Exception e) {
+                    System.out.println("Error handling client: " + e.getMessage());
                 }
-
-                connectionFromClient.close();
             }
         }
     }

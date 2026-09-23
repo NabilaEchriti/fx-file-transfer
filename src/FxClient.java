@@ -36,9 +36,9 @@ public class FxClient {
                         DataInputStream dataIn = new DataInputStream(in);
                         dataIn.readFully(fileBytes);
 
-                        FileOutputStream fileOut = new FileOutputStream("ClientShare/" + fileName);
-                        fileOut.write(fileBytes);
-                        fileOut.close();
+                        try (FileOutputStream fileOut = new FileOutputStream("ClientShare/" + fileName)) {
+                            fileOut.write(fileBytes);
+                        }
 
                         System.out.println("Fichier téléchargé avec succès : " + fileName);
                     }
@@ -52,10 +52,11 @@ public class FxClient {
                 headerWriter.write(request);
                 headerWriter.flush();
 
-                FileInputStream fileIn = new FileInputStream(file);
-                byte[] fileBytes = new byte[(int) fileSize];
-                fileIn.read(fileBytes);
-                fileIn.close();
+                byte[] fileBytes;
+                try (FileInputStream fileIn = new FileInputStream(file)) {
+                    fileBytes = new byte[(int) fileSize];
+                    fileIn.read(fileBytes);
+                }
 
                 DataOutputStream dataOut = new DataOutputStream(out);
                 dataOut.write(fileBytes);
