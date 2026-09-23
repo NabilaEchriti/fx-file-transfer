@@ -15,18 +15,15 @@ This project demonstrates low-level network programming in Java: a server listen
 
 **Download:**
 
-Client → Server : download <fileName>\n
-Server → Client : NOT FOUND\n
-or : OK <fileSize>\n + [file bytes]
-
+Client → Server: `download fileName` (followed by newline)
+Server → Client: `NOT FOUND` (followed by newline) if the file doesn't exist
+Server → Client: `OK fileSize` (followed by newline) + raw file bytes, if found
 
 **Upload:**
 
-Client → Server : upload <fileName> <fileSize>\n + [file bytes]
-Server → Client : STORED\n
-or : FAILED\n
-
-
+Client → Server: `upload fileName fileSize` (followed by newline) + raw file bytes
+Server → Client: `STORED` (followed by newline) if saved successfully
+Server → Client: `FAILED` (followed by newline) otherwise
 ## How to run
 
 1. Compile both files:
